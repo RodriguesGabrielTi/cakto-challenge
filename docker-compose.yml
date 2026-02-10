@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: cakto-app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - ./src:/app/src
+      - ./manage.py:/app/manage.py
+      - ./scripts:/app/scripts
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: cakto-db
+    environment:
+      POSTGRES_DB: cakto
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
