@@ -17,7 +17,7 @@ class TestSplitCalculatorBasic:
     """Cenários básicos de split."""
 
     def test_single_recipient_100_percent(self, split_calculator):
-        """Split 100% para um único recebedor — valor integral."""
+        """Split 100% para um único recebedor - valor integral."""
         result = split_calculator.calculate(
             Decimal("150.00"),
             [{"recipient_id": "producer_1", "role": "producer", "percent": 100}],
@@ -53,7 +53,7 @@ class TestSplitCalculatorBasic:
 
 
 class TestSplitCalculatorRounding:
-    """Cenários de arredondamento — regra do centavo (Largest Remainder)."""
+    """Cenários de arredondamento - regra do centavo (Largest Remainder)."""
 
     def test_three_equal_parts(self, split_calculator):
         """R$100.00 / 3 partes iguais: 33.34 + 33.33 + 33.33 = 100.00"""
@@ -86,7 +86,7 @@ class TestSplitCalculatorRounding:
         assert total == Decimal("10.00")
 
     def test_five_recipients_uneven(self, split_calculator):
-        """5 recebedores com percentuais ímpares — soma deve bater."""
+        """5 recebedores com percentuais ímpares - soma deve bater."""
         net = Decimal("999.99")
         result = split_calculator.calculate(
             net,
@@ -102,7 +102,7 @@ class TestSplitCalculatorRounding:
         assert total == net
 
     def test_small_amount_extreme_split(self, split_calculator):
-        """R$0.01 (1 centavo) split 50/50 — impossível dividir igualmente."""
+        """R$0.01 (1 centavo) split 50/50 - impossível dividir igualmente."""
         result = split_calculator.calculate(
             Decimal("0.01"),
             [

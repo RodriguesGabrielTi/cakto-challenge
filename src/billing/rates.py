@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from src.billing.models import PaymentMethod
+from src.billing.constants import PAYMENT_METHOD_PIX
 
 
 @dataclass(frozen=True)
 class CardRates:
-    """Taxas de cartão — injetável para facilitar testes e mudanças futuras."""
+    """Taxas de cartão - injetável para facilitar testes e mudanças futuras."""
 
     base: Decimal = Decimal("0.0399")  # 3.99% para 1x
     installment_base: Decimal = Decimal("0.0499")  # 4.99% base para parcelado
@@ -21,7 +21,7 @@ class PlatformRates:
     card: CardRates = CardRates()
 
     def get_rate(self, payment_method: str, installments: int) -> Decimal:
-        if payment_method == PaymentMethod.PIX:
+        if payment_method == PAYMENT_METHOD_PIX:
             return self.pix_rate
 
         if installments == 1:

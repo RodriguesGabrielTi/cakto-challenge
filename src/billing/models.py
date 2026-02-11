@@ -1,5 +1,6 @@
 from django.db import models
 
+from src.billing.constants import PAYMENT_METHOD_CARD, PAYMENT_METHOD_PIX
 from src.common.models import BaseModel
 
 
@@ -8,8 +9,8 @@ class PaymentStatus(models.TextChoices):
 
 
 class PaymentMethod(models.TextChoices):
-    PIX = "pix", "PIX"
-    CARD = "card", "CARD"
+    PIX = PAYMENT_METHOD_PIX, "PIX"
+    CARD = PAYMENT_METHOD_CARD, "CARD"
 
 
 class Payment(BaseModel):

@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     "src.idempotency",
 ]
 
-# Django Injector — módulos de injeção de dependência
+# Django Injector - módulos de injeção de dependência
 INJECTOR_MODULES = [
     "src.billing.di.BillingModule",
 ]
@@ -37,6 +37,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "src.common.middleware.DomainExceptionMiddleware",
 ]
 
 ROOT_URLCONF = "src.urls"
