@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from injector import Injector
 
-from billing.constants import CURRENCY_BRL
+from src.billing.constants import CURRENCY_BRL
 from src.billing.di import BillingModule
 from src.billing.services.payment_service import PaymentService
 
