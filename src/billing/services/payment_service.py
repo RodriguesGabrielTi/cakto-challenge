@@ -168,6 +168,6 @@ class PaymentService:
                 },
             }
 
-            self._idempotency.save_response(idempotency_key, cache_data)
+            self._idempotency.save_response(idempotency_result.record, cache_data)
 
         return response_data

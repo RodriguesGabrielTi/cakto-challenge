@@ -19,7 +19,6 @@ class IdempotencyRecord(BaseModel):
     payload_hash = models.CharField(max_length=64)
     status = models.CharField(max_length=20, choices=IdempotencyStatus, default=IdempotencyStatus.PROCESSING)
     response_data = models.JSONField(null=True, blank=True)
-    status_code = models.PositiveSmallIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

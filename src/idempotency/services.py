@@ -5,7 +5,7 @@ from typing import Optional
 
 from injector import inject, singleton
 
-from src.idempotency.models import IdempotencyStatus
+from src.idempotency.models import IdempotencyRecord, IdempotencyStatus
 from src.idempotency.repositories import IdempotencyRepository
 
 
@@ -13,6 +13,7 @@ from src.idempotency.repositories import IdempotencyRepository
 class IdempotencyResult:
     is_duplicate: bool
     is_conflict: bool
+    record: Optional[IdempotencyRecord] = None
     cached_response: Optional[dict] = None
 
 
@@ -44,8 +45,8 @@ class IdempotencyService:
         record = self._repository.get_by_key_for_update(key)
 
         if record is None:
-            self._repository.create(key, payload_hash)
-            return IdempotencyResult(is_duplicate=False, is_conflict=False)
+            new_record = self._repository.create(key, payload_hash)
+            return IdempotencyResult(is_duplicate=False, is_conflict=False, record=new_record)
 
         if record.payload_hash != payload_hash:
             return IdempotencyResult(is_duplicate=False, is_conflict=True)
@@ -61,7 +62,6 @@ class IdempotencyService:
         # Ainda processando (request concorrente) - trata como duplicata sem cache
         return IdempotencyResult(is_duplicate=True, is_conflict=False)
 
-    def save_response(self, key: str, response_data: dict) -> None:
-        record = self._repository.get_by_key_for_update(key)
-        if record:
-            self._repository.mark_completed(record, response_data)
+    def save_response(self, record: IdempotencyRecord, response_data: dict) -> None:
+        """Salva a resposta no registro de idempotência já existente (sem query extra)."""
+        self._repository.mark_completed(record, response_data)
