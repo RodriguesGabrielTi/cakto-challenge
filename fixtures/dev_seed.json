@@ -1,0 +1,85 @@
+[
+  {
+    "model": "billing.payment",
+    "pk": "a1b2c3d4-0001-4000-8000-000000000001",
+    "fields": {
+      "status": "captured",
+      "gross_amount": "150.00",
+      "platform_fee_amount": "0.00",
+      "net_amount": "150.00",
+      "payment_method": "pix",
+      "installments": 1,
+      "idempotency_key": "seed-pix-001",
+      "created_at": "2026-02-10T12:00:00Z"
+    }
+  },
+  {
+    "model": "billing.ledgerentry",
+    "pk": "b1b2c3d4-0001-4000-8000-000000000001",
+    "fields": {
+      "payment": "a1b2c3d4-0001-4000-8000-000000000001",
+      "recipient_id": "producer_1",
+      "role": "producer",
+      "amount": "150.00",
+      "created_at": "2026-02-10T12:00:00Z"
+    }
+  },
+  {
+    "model": "outbox.outboxevent",
+    "pk": "c1b2c3d4-0001-4000-8000-000000000001",
+    "fields": {
+      "event_type": "payment_captured",
+      "payload": {"payment_id": "a1b2c3d4-0001-4000-8000-000000000001", "amount": "150.00"},
+      "status": "pending",
+      "created_at": "2026-02-10T12:00:00Z",
+      "published_at": null
+    }
+  },
+  {
+    "model": "billing.payment",
+    "pk": "a1b2c3d4-0002-4000-8000-000000000002",
+    "fields": {
+      "status": "captured",
+      "gross_amount": "297.00",
+      "platform_fee_amount": "26.70",
+      "net_amount": "270.30",
+      "payment_method": "card",
+      "installments": 3,
+      "idempotency_key": "seed-card-002",
+      "created_at": "2026-02-10T12:01:00Z"
+    }
+  },
+  {
+    "model": "billing.ledgerentry",
+    "pk": "b1b2c3d4-0002-4000-8000-000000000002",
+    "fields": {
+      "payment": "a1b2c3d4-0002-4000-8000-000000000002",
+      "recipient_id": "producer_1",
+      "role": "producer",
+      "amount": "189.21",
+      "created_at": "2026-02-10T12:01:00Z"
+    }
+  },
+  {
+    "model": "billing.ledgerentry",
+    "pk": "b1b2c3d4-0003-4000-8000-000000000003",
+    "fields": {
+      "payment": "a1b2c3d4-0002-4000-8000-000000000002",
+      "recipient_id": "affiliate_9",
+      "role": "affiliate",
+      "amount": "81.09",
+      "created_at": "2026-02-10T12:01:00Z"
+    }
+  },
+  {
+    "model": "outbox.outboxevent",
+    "pk": "c1b2c3d4-0002-4000-8000-000000000002",
+    "fields": {
+      "event_type": "payment_captured",
+      "payload": {"payment_id": "a1b2c3d4-0002-4000-8000-000000000002", "amount": "297.00"},
+      "status": "pending",
+      "created_at": "2026-02-10T12:01:00Z",
+      "published_at": null
+    }
+  }
+]

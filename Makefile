@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-unit lint format clean migrate docker-build docker-up docker-down docker-clean docker-purge docker-logs dev seed
+.PHONY: help install install-dev test test-unit lint format clean migrate docker-build docker-up docker-down docker-clean docker-purge docker-logs docker-seed dev seed
 
 # Alvo padrão
 help:
@@ -68,7 +68,10 @@ migrate:
 	poetry run python manage.py migrate
 
 seed:
-	poetry run python scripts/seed.py
+	poetry run python manage.py loaddata fixtures/dev_seed.json
+
+docker-seed:
+	docker-compose exec app python manage.py loaddata fixtures/dev_seed.json
 
 # Docker
 docker-build:

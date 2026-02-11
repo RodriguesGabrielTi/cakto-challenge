@@ -18,6 +18,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "src.billing",
+    "src.outbox",
+    "src.idempotency",
 ]
 
 MIDDLEWARE = [
@@ -96,7 +99,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"  # Mantive, mas estou usando UUID
 
 # Django REST Framework
 REST_FRAMEWORK = {
