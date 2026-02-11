@@ -99,3 +99,7 @@ Todo código gerado foi revisado e validado manualmente.
 ---
 
 > **Seção de decisões técnicas será adicionada ao final do desenvolvimento.**
+
+## Melhorias futuras
+
+- **Tipar dicts com dataclasses**: os services atualmente usam `dict` para entrada/saída. O ideal seria criar dataclasses tipadas (ex: `PaymentInput`, `PaymentResult`, `Receivable`) para garantir contratos explícitos e facilitar manutenção.
