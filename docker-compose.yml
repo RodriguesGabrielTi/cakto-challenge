@@ -16,6 +16,7 @@ services:
       - ./src:/app/src
       - ./manage.py:/app/manage.py
       - ./scripts:/app/scripts
+      - ./fixtures:/app/fixtures
     restart: unless-stopped
 
   db:
