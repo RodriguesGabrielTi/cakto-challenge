@@ -18,6 +18,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_injector",
+    "src.billing",
+    "src.outbox",
+    "src.idempotency",
+]
+
+# Django Injector - módulos de injeção de dependência
+INJECTOR_MODULES = [
+    "src.billing.di.BillingModule",
 ]
 
 MIDDLEWARE = [
@@ -28,6 +37,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "src.common.middleware.DomainExceptionMiddleware",
 ]
 
 ROOT_URLCONF = "src.urls"
@@ -96,7 +106,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"  # Mantive, mas estou usando UUID
 
 # Django REST Framework
 REST_FRAMEWORK = {

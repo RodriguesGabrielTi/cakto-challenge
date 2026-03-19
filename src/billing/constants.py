@@ -1,0 +1,18 @@
+PAYMENT_METHOD_PIX = "pix"
+PAYMENT_METHOD_CARD = "card"
+
+MIN_INSTALLMENTS = 1
+MAX_INSTALLMENTS = 12
+
+MIN_SPLITS = 1
+MAX_SPLITS = 5
+
+EXPECTED_PERCENT_SUM = 100
+MIN_PERCENT = 0
+MAX_PERCENT = 100
+
+# Moedas suportadas - poderia ser uma tabela na base de dados com cache (ex: Redis) no futuro
+CURRENCY_BRL = "BRL"
+SUPPORTED_CURRENCIES = [CURRENCY_BRL]
+
+PAYMENT_CAPTURED_EVENT = "payment_captured"

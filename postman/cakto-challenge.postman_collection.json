@@ -1,0 +1,563 @@
+{
+  "info": {
+    "name": "Cakto Challenge - Payment Split Engine",
+    "description": "Coleção de testes para o endpoint POST /api/v1/payments.\nInclui cenários de sucesso, idempotência e validação.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "CARD 3x - Split 70/30",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "card-3x-70-30-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"297.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 3,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 70},\n    {\"recipient_id\": \"affiliate_9\", \"role\": \"affiliate\", \"percent\": 30}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "Exemplo do desafio: CARD 3x, split 70/30.\nEsperado: fee=26.70, net=270.30, producer=189.21, affiliate=81.09"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const data = pm.response.json();",
+                  "",
+                  "pm.test('Valores financeiros corretos', () => {",
+                  "    pm.expect(data.gross_amount).to.eql('297.00');",
+                  "    pm.expect(data.platform_fee_amount).to.eql('26.70');",
+                  "    pm.expect(data.net_amount).to.eql('270.30');",
+                  "});",
+                  "",
+                  "pm.test('Split correto', () => {",
+                  "    const producer = data.receivables.find(r => r.recipient_id === 'producer_1');",
+                  "    const affiliate = data.receivables.find(r => r.recipient_id === 'affiliate_9');",
+                  "    pm.expect(producer.amount).to.eql('189.21');",
+                  "    pm.expect(affiliate.amount).to.eql('81.09');",
+                  "});",
+                  "",
+                  "pm.test('Outbox event criado', () => {",
+                  "    pm.expect(data.outbox_event.type).to.eql('payment_captured');",
+                  "    pm.expect(data.outbox_event.status).to.eql('pending');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PIX - Split 100%",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "pix-100-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"150.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "PIX sem taxa, split 100% para um recebedor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const data = pm.response.json();",
+                  "",
+                  "pm.test('PIX sem taxa', () => {",
+                  "    pm.expect(data.platform_fee_amount).to.eql('0.00');",
+                  "    pm.expect(data.net_amount).to.eql('150.00');",
+                  "});",
+                  "",
+                  "pm.test('Recebedor recebe 100%', () => {",
+                  "    pm.expect(data.receivables[0].amount).to.eql('150.00');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CARD 1x - Taxa base 3.99%",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "card-1x-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "CARD 1x usa taxa base de 3.99%."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const data = pm.response.json();",
+                  "",
+                  "pm.test('Taxa 3.99%', () => {",
+                  "    pm.expect(data.platform_fee_amount).to.eql('3.99');",
+                  "    pm.expect(data.net_amount).to.eql('96.01');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CARD 12x - 5 recebedores",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "card-12x-5split-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"1000.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 12,\n  \"splits\": [\n    {\"recipient_id\": \"r1\", \"role\": \"producer\", \"percent\": 40},\n    {\"recipient_id\": \"r2\", \"role\": \"affiliate\", \"percent\": 25},\n    {\"recipient_id\": \"r3\", \"role\": \"affiliate\", \"percent\": 20},\n    {\"recipient_id\": \"r4\", \"role\": \"affiliate\", \"percent\": 10},\n    {\"recipient_id\": \"r5\", \"role\": \"affiliate\", \"percent\": 5}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "CARD 12x com 5 recebedores. Testa taxa máxima e distribuição com Largest Remainder."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const data = pm.response.json();",
+                  "",
+                  "pm.test('5 recebedores', () => {",
+                  "    pm.expect(data.receivables).to.have.length(5);",
+                  "});",
+                  "",
+                  "pm.test('Soma receivables == net_amount', () => {",
+                  "    const sum = data.receivables.reduce((acc, r) => acc + parseFloat(r.amount), 0);",
+                  "    pm.expect(sum.toFixed(2)).to.eql(data.net_amount);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Idempotência",
+      "item": [
+        {
+          "name": "1. Criar pagamento (chave fixa)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idempotency-test-fixed"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"50.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "Primeira requisição com chave fixa. Execute primeiro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "// Salva payment_id para comparar na próxima requisição",
+                  "pm.collectionVariables.set('first_payment_id', pm.response.json().payment_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Duplicata - mesmo payload (cache)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idempotency-test-fixed"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"50.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "Mesma chave + mesmo payload. Deve retornar 201 com mesmo payment_id (cache)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 (cache)', () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test('Mesmo payment_id (não duplicou)', () => {",
+                  "    const firstId = pm.collectionVariables.get('first_payment_id');",
+                  "    pm.expect(pm.response.json().payment_id).to.eql(firstId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Conflito - payload diferente (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idempotency-test-fixed"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"999.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"producer_1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            },
+            "description": "Mesma chave + payload diferente. Deve retornar 409 Conflict."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+                  "",
+                  "pm.test('Mensagem de conflito', () => {",
+                  "    pm.expect(pm.response.json().detail).to.include('Idempotency-Key');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Validações",
+      "item": [
+        {
+          "name": "Sem Idempotency-Key (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Amount negativo (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "val-neg-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"-10.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Moeda inválida (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "val-usd-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"USD\",\n  \"payment_method\": \"card\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PIX com parcelas (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "val-pix-inst-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"pix\",\n  \"installments\": 3,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CARD 13 parcelas (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "val-13x-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 13,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 100}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Splits soma != 100% (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "val-split-sum-{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"BRL\",\n  \"payment_method\": \"card\",\n  \"installments\": 1,\n  \"splits\": [\n    {\"recipient_id\": \"p1\", \"role\": \"producer\", \"percent\": 50},\n    {\"recipient_id\": \"p2\", \"role\": \"affiliate\", \"percent\": 30}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
